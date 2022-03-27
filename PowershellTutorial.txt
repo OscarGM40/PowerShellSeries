@@ -1,0 +1,97 @@
+			 POWERSHELL TUTORIAL SERIES
+
+Playlist: https://www.youtube.com/watch?v=hXwVm3vC-10&list=PLAVSKeDM4AqN8zINh1niRxoZKqpd9FgtE&ab_channel=ABMedia
+
+Powershell es extremadamente útil y poderosa.Está construida sobre .NET(C# también está built in top of .NET).
+El autor recomienda bajarse la última versión desde el repo de GitHub(la 6) y no usar la 5 que es la que viene instalada por defecto.
+Para ver la version tipear:
+$PSVersionTable <- puedo ver que tengo la 5
+
+El principal concepto a tener en cuenta es lo que devuelve PS.En otras lineas de commando como bash,cada comando devuelve una única cosa,texto.
+Si hago un ls devolverá texto,esto es muy simple y útil,pero extremadamente limitante.
+
+Powershell toma una aproximación diferente.Los comandos no devuelven texto,sino que devuelven un objeto(pudiendo iterar sobre sus propiedades).
+Si hago un ls en PS no se me devolverá texto,sino un arreglo de objetos File
+
+>ls | ft <- realmente me está formateando la salida en formato tabla
+
+IMPORTANTE: de forma similar a Bash,puedo redireccionar la salida del comando de la izquierda a la entrada del comando de la derecha con un pipe '|'
+Ejemplo: si hago un Format-List veré las propiedades del objeto listadas en cada linea:
+>ls | fl
+
+Name           :   _viminfo
+Length         : 16378
+CreationTime   : 28/05/2021 22:17:40
+LastWriteTime  : 27/03/2022 10:51:51
+LastAccessTime : 27/03/2022 10:51:51
+Mode           : -a----
+LinkType       :
+Target         :   _viminfo
+
+Puedo ver que las propiedades son Name, Length,CreationTime,etc...
+
+Otro comando útil es Get-Process que me devuelve todos los procesos en ejecución.Puedo contarlos con el comando Measure:
+>ls | Measure
+
+* Por defecto Measure va a tratar de hacer la media,el máximo,mínimo,acumulado,etc(trata de obtener diferentes medidas).Dado que es un ls no tiene sentido un máximo o mínimo,asi que sólo devolverá la cuenta de archivos listados
+
+╰─ ls | measure
+
+Count    : 36
+Average  :
+Sum      :
+Maximum  :
+Minimum  :
+Property :
+
+NOTA: puedo ver que esta vez eligió el Format-List,dado que era sólo un objeto.Obviamente puedo formatearlo a una tabla
+
+			COMANDOS IMPORTANTES where - sort - foreach
+
+Si bien Measure o Get-Process no son comandos muy importantes,hay varios comandos que usaré mucho ya que son básicos.
+
+1- Comando Where: El comando Where { condition } me permite filtrar objetos en base a una condición lógica
+
+>ls | Where { $_.Extension -eq '.txt' } <- fijate en los espacios,en que Extension es una propiedad, en el -eq para equal y en que es un string con '.txt',pues es una Extension
+
+NOTA: puedo usar single quotes o double quotes.
+
+Obviamente puedo usar la clausula where sobre la salida de cualquier comando.Por ejemplo,veamos como obtener los procesos que llevan más de 5 segundos ejecutandose:
+>Get-Process | where { $_.CPU -gt 5 } | select -First 1 <- fijate como puedo emular a head o tail con select -First 5 o select -Last 5.También al ser un numero no debo usar 
+Obviamente puedo usar la clausula where sobre la salida de cualquier comando.Por ejemplo,veamos como obtener los procesos que llevan más de 5 segundos ejecutandose:
+
+>Get-Process | where { $_.CPU -gt 20 } | select -First 1 <- fijate como puedo emular a head o tail con select -First 5 o select -Last 5.También al ser un numero no debo usar comillas en la condicion.
+
+2- Comando Sort: El Comando Sort { $_.Property } me permite ordenar por una propiedad del Objeto.Por ejemplo ordenemos los procesos que llevan más de 20 segundos por su ID:
+>Get-Process | where { $_.CPU -gt 20 } | Sort { $_.Id } | select -First 5
+
+IMPORTANTE: el $_ representa el objeto actual en la iteracción.La primera vez $_ será el File(o Proceso) numero 1,despues $_ será el segundo,etc.Es la iteracción actual.
+El punto(.) por otro lado indica a Powershell que quiero acceder a una propiedad del objeto
+
+-3 Comando ForEach: el comando ForEach { action to do } es más complicado de entender ya que se usa de dos maneras diferentes.HACE UNA SOLA COSA,PERO SE USA PARA DOS.
+UNA: ForEach iterará por cada objeto que le pase y ejecutará el código de su interior(es como un map o el forEach de Javascript).Esta es la forma más simple de uso.Por ejemplo:
+>ls | ForEach { echo 'I found something' } <- simplemente iterará
+
+IMPORTANTE: ForEach retornará también Objects,pudiendo encadenarlos.Aqui es donde entra la segunda forma en la que es usado ForEach.
+DOS: puedo usar ForEach para filtrar Objetos bajando hasta las propiedades.Por ejemplo,ya sabemos que Measure va a fallar sobre un File,pues no es un conjunto de numeros.Puedo entrar hasta la propiedad Size de cada File para poder hacer la media correctamente:
+ls | ForEach { $_.Name } <- fijate que filtra por el Name
+
+IMPORTANTE: Measure por defecto sólo va a obtener el sumatorio.Para que realice un máximo,mínimo,media,etc debo pasarle su flag(Measure -Average en este caso):
+
+╰─ ls | foreach { $_.Length } | measure -Average
+
+
+Count    : 36
+Average  : 1394,80555555556
+Sum      :
+Maximum  :
+Minimum  :
+Property :
+
+Ejercicio: obtener todos los procesos con Id mayor a 4000 y traer la media del CPU time:
+>Get-Process | where { $_.Id -gt 4000 } | foreach { $_.CPU } | Measure -Average -Sum 
+
+Puedo observar que where y foreach tal como comenta el autor son comandos fundamentales.
+En el siguiente video veré la sintaxis,como descubrir los comandos,las flags,...
+
+			VIDEO 02 GOING FURTHER WITH POWERSHELL
