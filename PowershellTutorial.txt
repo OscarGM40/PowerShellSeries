@@ -95,3 +95,31 @@ Puedo observar que where y foreach tal como comenta el autor son comandos fundam
 En el siguiente video veré la sintaxis,como descubrir los comandos,las flags,...
 
 			VIDEO 02 GOING FURTHER WITH POWERSHELL
+
+Dado que escribir comandlets como Set-Location es muy largo es por esto que existen aliases.Por ejemplo where era realmente un alias para Where-Object 
+Fijate que en powershell puedo posarme en Files,en cualquier Objecto,no solo en directorios(pues no lo consigo).
+IMPORTANTE: en Windows existe el concepto de Drives o Discos,siempre seguirán la sintaxis <name>: por ejemplo C: o D: o Root: Obviamente en Linux cambia y solo existe root(/).
+
+Para ver los discos tengo el comando Get-PSDrive.Veré que el registro es un Drive,por ejemplo.
+
+NOTA: un Commandlet es un Object también.En PS casi todo comando está construido con la estructura Verb-Noun.Asi pues cada comando es un objeto con las propiedades Name(Verb+Noun),Verb,Noun,Parameters
+Un parámetro en esencia es una forma de darle más detalles a un comando.Por ejemplo,el comando Subscribe-Channel no vale de nada sin un parámetro, pues obviamente necesito un canal al que suscribirme.
+Los parámetros pueden ser obligatorios o requeridos
+
+IMPORTANTE: siempre que un comandlet requiera argumentos y no se los pase en el comando inicial me los pedirá por consola
+
+NOTA: puedo ver la ayuda de cualquier comando y ver si los argumentos son obligatorios o opcionales.Obligatorios van entre <> y opcionales entre []. Por ejemplo:
+Get-Service [[-Name] <string[]>]  [<CommonParameters>]
+* Puedo ver que todos son opcionales,
+
+También es importante entender que muchos comandos tienen variaciones,asi,puedo buscar fácilmente por archivos de una extensión determinada con 
+>ls *.txt
+O también
+>ls | where { $_.Extension -eq ".txt"}
+Obviamente la primera forma es más útil.Recuerda que si uso -Like se me permite usar las wildcards * para usar regexp.
+
+TEORIA: POWERSHELL corre sobre el CLR(Core Language Runtime).Este Core es responsable incluso de dejar que PS se ejecute,ya que provee el 'JIT compiler'.También provee un Garbage Collector,entre otras cosas más.Sea como sea es importante entender que Powershell depende del CLR.
+Si bien el CLR permite realizar esto contra el hardware,para poder usarlo se necesita .NET,el cual está sobre el CLR(pero muy integrado con él).Recordando el ls anterior,que devuelve Files,estos Objetos File están echos en DotNet
+
+También están las Libraries,básicamente permiten añadir sus propios Objects,extendiendo funcionalidad(cada archivo dll es una libreria).Por ejemplo tengo a .net dll.
+Se puede añadir cualquier libreria a casi cualquier cosa en informática
