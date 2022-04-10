@@ -13,7 +13,7 @@ Si hago un ls devolverá texto,esto es muy simple y útil,pero extremadamente li
 Powershell toma una aproximación diferente.Los comandos no devuelven texto,sino que devuelven un objeto(pudiendo iterar sobre sus propiedades).
 Si hago un ls en PS no se me devolverá texto,sino un arreglo de objetos File
 
->ls | ft <- realmente me está formateando la salida en formato tabla
+>ls | ft <- realmente me está formateando ya la salida en formato tabla
 
 IMPORTANTE: de forma similar a Bash,puedo redireccionar la salida del comando de la izquierda a la entrada del comando de la derecha con un pipe '|'
 Ejemplo: si hago un Format-List veré las propiedades del objeto listadas en cada linea:
@@ -123,3 +123,77 @@ Si bien el CLR permite realizar esto contra el hardware,para poder usarlo se nec
 
 También están las Libraries,básicamente permiten añadir sus propios Objects,extendiendo funcionalidad(cada archivo dll es una libreria).Por ejemplo tengo a .net dll.
 Se puede añadir cualquier libreria a casi cualquier cosa en informática
+
+			VIDEO 03 VARIABLES + NOTEPROPERTIES + CSV FILES
+
+Una variable en su forma más simple es un lugar en la memoria donde puedo almacenar objetos.Cada variable tendrá un nombre único que la identifique.Siguiendo los ejemplos anteriores puedo almacenar los procesos con un uso de CPU mayor al 20% en una variable:
+* Despues mediremos la media y filtraremos por alguna condición.También los ordenaremos.Es por esto que almacenar la primera operación en una variable es una buena idea.
+
+>$expensiveProcesses = Get-Process | where {$_.CPU -gt 20}
+
+TIP: es más eficiente almacenar el Get-Process | {} inicial en una variable que recalcularlo en cada instrucción por la consola.Asi que el uso de variables es una buena idea en varios sentidos
+
+Para almacenar la data en una variable simplemente la asigno a $<varName>.Para leerla usaré la misma sintaxis:
+>$expensiveProcesses	<- esto llamará al otro comando,imprimiendolo
+>$expensiveProcesses | foreach { $_.CPU } | Measure -Average <- fijate como el foreach está actuando de filter,de echo no funcionaría el Measure sin él.
+
+TIP: fijate que puedo acceder con $person.Name a un objeto que tuviera la propiedad Name(recuerda que serán mayúsculas en C#).
+
+			COMANDO IMPORT-CSV
+
+Este comando Import-Csv toma toda la información de un archivo CSV y la transforma en Objetos(en una tabla de registros donde cada registro es un Object).
+TIP: PS también carga XML y JSON
+>$students = Import-Csv -Path 'students.csv
+
+NOTA FUNDAMENTAL: un CSV no sabe distinguir entre texto y numeros(no sucede lo mismo con xml o json)(yo creo que en realidad entrega todo como Strings y hay que convertir a int) 	
+>$t="123"
+>$t + 1 <- me dará el string 1231
+>[int]$t +1 <- me dará 124
+
+Con todo esto en mente hay que parsear las columnas Maths y Age:
+>$students | foreach { $_.Maths = [int]$_.Maths} 
+>$students | foreach { $_.Age = [int]$_.Age} 
+Y ya podria sabar la media correctamente:
+>$students | foreach { $_.Maths } | Measure -Average -Maximum -Minimum -Sum
+
+			PROPERTIES - NoteProperty
+
+Las properties no son lo único que puedo encontrar en un Object en PS.Hay más cosas,aunque normalmente no son importantes.
+Otras,como ScriptProperty,que permite ejecutar un pequeño script al acceder a la property si puede ser importante.
+Sabiendo esto,también debo saber que cualquier property está o existe físicamente en DotNet(es decir,que su código ya existia antes de arrancar la Powershell).
+Es decir,que no puedo hacer que un File no tenga la propiedad Size o Extension,ya que ese código no es de mi acceso.No puedo remover ni,obviamente,añadir.
+
+IMPORTANTE: sin embargo,si que hay una cosa especial que puedo hacer,y es añadir una NoteProperty a cualquier Object,en cualquier momento, mientras esté corriendo Powershell.
+
+De echo,todas las properties que resultaron de leer el csv con Import-Csv son NoteProperties,ya que no existen en .NET,sólo existen para esa ejecución de la terminal.
+
+Con todo esto en mente,podemos crear otra nueva columna/NoteProperty que sea la resultante de sumar las columnas English y Maths,para despues EXPORTAR ESE CSV, con el comando Export-Csv.Genial
+
+		AÑADIENDO PROPIEDADES A OBJETOS - Add-Member
+
+Primero guardamos un File,que será nuestro csv:
+>$file = ls | where { $_.Name -Like "*.csv" }
+Añadamos una Columna/NoteProperty "Importance".Para ello voy a usar el comando Add-Member.La sintaxis es Add-Member -InputObject <ObjectName> -MemberType <Type> -Name <Name> -Value <Value>
+
+>Add-Member -InputObject $file -MemberType NoteProperty -Name 'Importance'
+*Desafortunadamente tengo que pedir explicitamente esta propiedad:
+>$file | ft -Property Name,Lenghth,Importance
+
+╰─ $file | ft -Property Name,Length,Importance
+
+Name         Length Importance
+----         ------ ----------
+students.csv   2323          0
+
+Obviamente ahora ya puedo cambiarla:
+>$file.Importance = 5
+
+>$students | foreach { Add-Member -InputObject $_ -MemberType NoteProperty -Name 'Sum' -Value ($_.Maths + $_.English) } <- ojo con los parentesis,asinto
+
+Ya puedo guardarlo a un .csv:
+>$students | Export-Csv 'WithNoteProperty.csv' <- Perfecto
+
+IMPORTANTE: el comando anterior es demasiado largo,no sería mejor que hubiera una forma de reducirlo?.La verdad es que la hay,usando alias.Lo veré en breve.
+
+
+
