@@ -196,4 +196,131 @@ Ya puedo guardarlo a un .csv:
 IMPORTANTE: el comando anterior es demasiado largo,no sería mejor que hubiera una forma de reducirlo?.La verdad es que la hay,usando alias.Lo veré en breve.
 
 
+			VIDEO 04 TYPES + METHODS + CASTING
 
+Tal como ya hemos mencionado el comando para añadir la nueva columna es demasiado largo.¿Como podría acortarlo?.
+
+Uno: Hay un alias para ForEach,es el simbolo del porcentaje:
+$students | % { $_.English = [int]$_.English } <- esto resume un poco,si
+
+Dos: No necesito usar -InputObject ,puedo pipear el objeto al comando:
+$students | % { $_ | Add-Member
+
+Tres: Dado que siempre que se usa Add-Member,o al menos el 95% de las veces, es para añadir una NoteProperty hay un atajo que creo el equipo de Powershell:
+$students | % { $_ | Add-Member -NotePropertyMembers @{Sum=($_.Maths + $_.English)}  }
+* puedo traducirlo por añado una NoteProperty que será la resultante de sumar esa operación(y el nombre??) 
+TIP: veré más sobre como usar @{} más adelante
+
+				   TYPES FOR OBJECTS
+
+IMPORTANTE:como ya he podido apreciar los Objects son la parte central de Powershell.En Powershell todo Object tiene un Type atado a él.Cada Type describe los miembros que un objeto tendrá.(Estos tipos vienen de .NET).
+Por ejemplo,cuando haga un Get-Process recibiré un arreglo de objetos Process.Obviamente,es como una clase,cada instancia tendrá las mismas propiedades/miembros.
+NOTA: en Powershell para referirme a un Type tengo que usar square brackets y el type dentro:
+[string]
+[int]
+Fijate que son los primitivos de C#.
+
+TIP: puedo obtener información sobre un type con [type]
+>[bool]
+
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     True     Boolean                                  System.ValueType
+
+			CASTING DE TYPES
+
+Ya he visto antes como castear a otro tipo.Para hacerlo simplemente paso el [type] antes:
+$s = "123" <- es un string
+[int]$s <- ahora será el number 123
+TIP: el casting convierte un tipo de objeto a otro.
+Obviamente,no puedo castear todo,no podría castear un Number a File,pues no tiene sentido
+
+				PROPERTIES IN-DEPTH
+
+Toda Property tiene un Name + un Type,por ejemplo la Property Extension de un File es de tipo String.O la property Name de ese Objeto File también será un String.
+Este tipo de Properties no puedo cambiarlas el Type,a diferencia de las NoteProperties,que si puedo darlas el Type que necesite.
+
+			METHODS IN POWERSHELL
+
+Realmente está bastante claro ya que los Objects en PS tendrán properties no customizables y otras que puedo crear.Pero también puedo ejecutar acciones contra los objetos,puedo darles comportamiento.Para ello usaré los methods.
+Un method es un bloque de código que puede ejecutar cierta acción al llamarse(start a process,delete a file,..
+Hay que tener en cuenta que diferentes tipos de Object tendrán diferentes tipos de métodos disponibles.
+TIP:cada mismo tipo de objeto compartirá los mismos métodos(cada File puede hacer lo mismo,cada Process lo mismo,...
+Obviamente un método puede tomar argumentos,de echo es bastante normal.
+
+NOTA: Powershell tratará de hacer coincidir los types de los argumentos.A esto se le llama autocasting.Por ejemplo puedo pasarle un File aunque espere un string[]:
+>Import-Csv -Path $file <- tratará de pasar el File a String
+Powershell es bastante potente a la hora de hacer autocasting,claro que obviamente tiene sus límites
+
+IMPORTANTE: los métodos también devolverán Objects.Sin embargo,no todo método devuelve algo,pero en caso de hacerlo devolverá un Object.Bien.Es hora de ver como se llaman en PS
+
+			CALLING METHODS IN POWERSHELL
+
+Puedo empezar con el método GetType.Todo Objeto en PS tiene acceso a este método,el cual,obviamente nos dice el tipo o clase del Objecto:
+
+╰─ $s="string"
+
+╭─ ♥ 09:33 |          PowerShellSeries
+╰─ [string]
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     True     String                                   System.Object
+
+╰─ $s.GetType()
+
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     True     String                                   System.Object
+
+Puedo ver que tanto llamar a [string] como a "hola".GetType()  me devuelve el mismo Objct.
+
+TIP: para saber el nombre programático de un File lo tengo en la property Name:
+╰─ $file.GetType()
+
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     True     FileInfo                                 System.IO.FileSystemInfo
+
+Asi pues,un File es de tipo FileInfo.
+
+Puedo ejecutar un método por cada iteración,por ejemplo.
+>Get-Process | % { $_.GetType() } 
+
+TIP: realmente GetType puede arrojar mucha más información,pero tengo que imprimirla en formato lista y no tabla para ver la que estaba oculta:
+> "hola".GetType() | fl
+
+BaseType                   : System.Object
+UnderlyingSystemType       : System.String
+FullName                   : System.String
+AssemblyQualifiedName      : System.String, mscorlib, Version=4.0.0.0, Culture=neutral,
+PublicKeyToken=b77a5c561934e089
+Namespace                  : System
+GUID                       : 296afbff-1b0b-3ff5-9d6c-4e7e599f8b57
+IsEnum                     : False
+
+Puedo ver que son muchas y realmente complejas,no son necesarias de momento.
+
+				CHAINING METHODS
+
+También puedo encadenar métodos,por ejemplo GetProperties() me devuelve las propiedades de un Type y getType me devuelve un Type,luego:
+╰─ "hola".GetType().GetProperties() | ft
+
+MemberType Name   DeclaringType ReflectedType MetadataToken Module                       PropertyType Attributes CanRead CanWrite
+---------- ----   ------------- ------------- ------------- ------                       ------------ ---------- ------- --------
+Property Length System.String System.String     385876102 CommonLanguageRuntimeLibrary System.Int32       None    True    False
+Property Chars  System.String System.String     385876101 CommonLanguageRuntimeLibrary System.Char        None    True    False
+
+
+Puedo ver que Length es un Int32 y Chars es un Char
+
+			COMMANDS VS METHODS
+
+Por último debo comprender la diferencia entre comandos y métodos.Por ejemplo,para borrar un objeto puedo usar el comando Remove-Item o el método .Delete():
+$obj | Remove-Item <- puedo borrar algo usando el comando ó
+$obj.Delete() <- también puedo borrarlo usando el método
+
+TIP: puedo cambiar los permisos a un archivo con takeown( /a /r /f) + ruta.Ejemplo:
+>takeown /a /r /f C:Documents <- /a es para que los coga el administrador,pero puedo omitirlo y tomará control el user actual.
+Este comando requiere de una consola elevada en permisos.
+
+NOTA: el consejo es que use el comandlet siempre que exista y cuando no exista ya use métodos.Es decir,que los métodos son para cosas más complejas,seguramente tenga que definirlos y desarrollarlos primero.
