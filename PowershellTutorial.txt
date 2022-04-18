@@ -324,3 +324,114 @@ TIP: puedo cambiar los permisos a un archivo con takeown( /a /r /f) + ruta.Ejemp
 Este comando requiere de una consola elevada en permisos.
 
 NOTA: el consejo es que use el comandlet siempre que exista y cuando no exista ya use métodos.Es decir,que los métodos son para cosas más complejas,seguramente tenga que definirlos y desarrollarlos primero.
+
+		EPISODE 5 METHODS WITH PARAMETERS- OVERLOAD OF METHODS
+
+Este video es la parte dos del anterior.Nos acercamos también a una GUI que haremos con botones y todo en PS.
+Types: recuerda que cada Object tiene un Type(Class),por ejemplo puede ser de Type Process o File.Según el tipo,tendrá ciertas Properties y Methods disponibles,y puedo agregar NoteProperties también durante la session.
+
+TIP: puedo usar el método GetType en cualquier objeto,es un método sobre el que toda instancia tiene visión:
+"hola".GetType() <- fijate que me devolverá el Type el método
+
+IMPORTANTE: y de igual manera que puedo ver las properties de un Type con Type.GetProperties() también puedo ver los métodos con Type.GetMethods()
+
+			PARAMETERS IN METHODS
+
+Si intento mover un file(un Object) con Object.MoveTo() sin usar argumentos veré el siguiente error:
+
+╰─ $file.MoveTo()
+No se encuentra ninguna sobrecarga para "MoveTo" y el número de argumentos "0".
+En línea: 1 Carácter: 1
++ $file.MoveTo()
+
+NOTA:el argumento además es de tipo string,no sólo tendré que cumplir con el número de argumentos del método,sino con sus tipos.
+
+Lo mismo ocurrirá con String.Replace(a,b).Necesitará dos argumentos o no funcionará:
+╰─ "a,b".Replace(',','-');
+
+			FORMAL DESCRIPTIONS OF METHODS
+
+Bien,debe haber una forma de consultar cada método,con sus sobrecargas,número de argumentos,orden de los mismos,..,no?
+void Close()
+bool WaitForExit(int miliseconds)
+void M(string a,int b)
+TIP: puedo ver que esto es C#.PowerShell va a seguir su sintaxis.Dado que C# está escrito sobre .NET y PowerShell también,se compartirá el lenguaje.Bien.
+
+string A { get; } <- getter,puedo leer la info(con un setter la cambiaré)
+
+			VIEWING MEMBERS
+
+Con el método Get-Member puedo listar todos los Members de un Object(tanto las Properties como los Métodos).Es un método fantástico para ver todo lo que tiene un Objeto:
+>Get-Process | Get-Member
+
+
+   TypeName: System.Diagnostics.Process
+
+   Name                       MemberType     Definition
+   ----                       ----------     ----------
+   Handles                    AliasProperty  Handles = Handlecount
+   Name                       AliasProperty  Name = ProcessName
+   NPM                        AliasProperty  NPM = NonpagedSystemMemorySize64
+   PM                         AliasProperty  PM = PagedMemorySize64
+   SI                         AliasProperty  SI = SessionId
+   VM                         AliasProperty  VM = VirtualMemorySize64
+   WS                         AliasProperty  WS = WorkingSet64
+   Disposed                   Event          System.EventHandler Disposed(System.Object, Sy...
+   ErrorDataReceived          Event          System.Diagnostics.DataReceivedEventHandler Er...
+   Exited                     Event          System.EventHandler Exited(System.Object, Syst...
+   OutputDataReceived         Event          System.Diagnostics.DataReceivedEventHandler Ou...
+   BeginErrorReadLine         Method         void BeginErrorReadLine()
+   BeginOutputReadLine        Method         void BeginOutputReadLine()
+   CancelErrorRead            Method         void CancelErrorRead()
+   CancelOutputRead           Method         void CancelOutputRead()
+   Close                      Method         void Close()
+   CloseMainWindow            Method         bool CloseMainWindow()
+
+Puedo ver en la Propiedad MemberType el tipo de cada Member,si es un Method o AliasProperty o Property,Event,etc...
+IMPORTANTE: en algunas Properties veré tanto si sólo las puedo leer como si las puedo modificar:
+MaxWorkingSet              Property       System.IntPtr MaxWorkingSet {get;set;}
+MinWorkingSet              Property       System.IntPtr MinWorkingSet {get;set;}
+Modules                    Property       System.Diagnostics.ProcessModuleCollection Mod...
+NonpagedSystemMemorySize   Property       int NonpagedSystemMemorySize {get;}
+NonpagedSystemMemorySize64 Property       long NonpagedSystemMemorySize64 {get;}
+
+Las que tenga acceso al getter y setter veré {get;set;}.Perfecto.
+
+				SOBRECARGA DE MÉTODOS
+
+Bien,si me fijo en este método,veré que tiene varias formas posibles de llamarlo:
+WaitForExit                Method         bool WaitForExit(int milliseconds), void WaitForExit()
+WaitForInputIdle           Method         bool WaitForInputIdle(int milliseconds), bool WaitForInputIdle()
+A esto se le llama sobrecarga de métodos.Realmente son varios métodos,todos con el mismo nombre,y según el número y orden se llamará a uno u otro.
+
+TIP: si llamo aun método por referencia PS me dirá su sobrecarga:
+╰─ "a".Replace
+
+OverloadDefinitions
+-------------------
+string Replace(char oldChar, char newChar)
+string Replace(string oldValue, string newValue)
+
+Esto es genial,ya que antes de llamarlo puedo consultar rápidamente su sobrecarga.
+TIP: recuerda que where es como find,devolverá las iteracciones que se resuelvan a true.
+
+		EXPERIMENTING WITH TYPES
+
+Ya sé que ls me muestra todos los files y directories,pero si quisiera puedo listar sólo los directorios:
+>ls -Directory
+Bien,obviamentes esto es lo que haré cuando quiera ver sólo los directorios,usar la flag,pero que tal si lo hacemos filtrando los Types,ya que estamos viendo Types?:
+
+╰─ ls | % { $_.GetType() }
+
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     True     DirectoryInfo                            System.IO.FileSystemInfo
+True     True     FileInfo                                 System.IO.FileSystemInfo
+True     True     FileInfo                                 System.IO.FileSystemInfo
+True     True     FileInfo                                 System.IO.FileSystemInfo
+True     True     FileInfo                                 System.IO.FileSystemInfo
+
+Con esto en mente podría listar los directorios asi:
+╰─ ls | ? { $_.GetType().Name -eq "DirectoryInfo" }
+
+	
