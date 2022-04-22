@@ -434,4 +434,145 @@ True     True     FileInfo                                 System.IO.FileSystemI
 Con esto en mente podría listar los directorios asi:
 ╰─ ls | ? { $_.GetType().Name -eq "DirectoryInfo" }
 
-	
+			VIDEO 06 PRIMITIVES - IMPORTANT TYPES + NEW KEYWORD	
+
+Algunos objetos son tan fundamentales,como los numeros o boleanos,que no pueden ser descompuestos en propiedades más pequeñas	
+NOTA: los primitivos son tipos especiales de objetos,hay muy pocos,y son tan básicos que no pueden ser descompuestos en tipos más pequeños.	
+TIP: los primitivos son creados en el CLR.Todo el sistema de objetos y de métodos viene de alli,del CLR.
+
+Los primitivos más comunes son :
+
+byte (Byte)        sbyte(Sbyte)   
+short (Int16)      ushort(UInt16)
+int (Int32)        uint(UInt32)
+long (Int64)       ulong(UInt64)
+float(Single)     <- 32bits ú 4bytes
+double(Double)    <- 64bits ú 8bytes
+decimal(Decimal)  <- 128bits <- realmente no es un primitivo
+
+string  <- realmente es un array de char
+char
+array
+
+* Fijate que short son 16bits,o sea 2 bytes,obviamente byte es un byte u 8 bits y el int son 32bits u 4 bytes.El long gastará 8 bytes en memoria(o 64bits).Todos tienen su version unsigned.Además,casi siempre trabajaré con int o long
+
+En cuanto a operaciones puedo ejecutar las ya conocidas en PowerShell.Incluso puedo usar el shortcut <operation>=.Es decir:
+$num = 3;
+$num += 2 <- igual que $num = $num + 2;
+
+TIP: hay una propiedad isPrimitive de tipo bolean que puede decirme si el tipo es primitivo:
+╰─ [bool].IsPrimitive
+True
+
+╰─ [int].IsPrimitive
+True
+
+╰─ [string].IsPrimitive
+False
+
+╰─ [char].IsPrimitive
+True
+
+Puedo ver que int o char son primitivos y string no.Sin embargo tecnicamente para muchos lo es y además es tratado de forma muy especial por la CLR de DotNet.
+
+NOTA:puedo usar comillas simples o dobles sobre un string,sin embargo no son lo mismo en la PowerShell.
+SINGLE QUOTES
+Cuando use single quotes todo lo que escriba dentro de ellas será tratado como un literal,como lo que es o pone:
+╰─ 'hello $name'
+hello $name
+Si quisiera escapar una comilla doble tengo que usar otra,y no el caracter de escape:
+╰─ 'hello ''$name'
+hello '$name
+DOUBLE QUOTES
+Son casi lo mismo,con la excepción de que pueden interpretar una variable:
+╰─ "El num es $num"
+El num es 3
+Es como se hace la interpolación de variables,de echo puedo meter lógica alli:
+╰─ "Y ahora el num es $($num+2)"
+Y ahora el num es 5
+Logicamente,puedo concatenar strings con el operador +:
+
+╰─ $str="el num es"
+╰─ $str +  ":"
+el num es:
+
+NOTA: un array es una colección de objetos(de strings,o numeros,etc).Un string tecnicamente es un string de chars,aunque es tan común que se ha abreviado su construcción a unas simples comillas.Sin embargo sigue siendo un array por detrás.
+
+Además,ya hemos estado trabajando con arrays.Un ls tecnicamente me devuelve un array de Files y Directories y Get-Process me devolvió un array de Process.
+
+			OTHER IMPORTANT TYPES
+
+Sin embargo,sólo con los tipos primitivos no llegaría lejos.Otros tipos como Date o DateTime,File,Directory son casi tan importantes como los primitivos.
+Puedo incluso crear objetos con ellos,por ejemplo una instancia de StringBuilder:
+
+╰─ $sb = [System.Text.StringBuilder]::new()
+
+╰─ $sb.GetType()
+
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     True     StringBuilder                            System.Object
+
+Fijate en el uso de ::new().Algunos constructores pedirán parámetros,como el de la clase DateTime:
+╰─ [DateTime]::new()
+No se encuentra ninguna sobrecarga para "new" y el número de argumentos "0".
+En línea: 1 Carácter: 1
++ [DateTime]::new()
+* puedo ver la sobrecarga de métodos con [Type]::method <- sin llamarlo
+╰─ [DateTime]::new
+
+OverloadDefinitions
+-------------------
+datetime new(long ticks)
+datetime new(long ticks, System.DateTimeKind kind)
+datetime new(int year, int month, int day)
+
+Ahora si,sabiendo los argumentos puedo crear mi objeto
+╰─ [DateTime]::new(1988,5,26)
+
+jueves, 26 de mayo de 1988 0:00:00
+
+Claro que es un poco engorroso crear objetos asi,es por ello que existe el comando New-Object <Class>.
+
+			CREATING AND USING ARRAYS
+
+Bien,pero,¿como creo un array en PS?.Fácil,para ello debo usar la sintaxis @() con los elementos separados por comas:
+@('Alex','Mike','John') <- Powershell creará un array
+Cada elemento del array será un Item o Element accesable por su indice:
+╰─ $arr[0]
+John
+
+Puedo ver que el tipo del arreglo es Object[]
+╰─ $arr.GetType().Name
+Object[]
+
+Ahora ya puedo empezar a hacer cosas tan fancy como estas:
+$arr | % { "Name: $_" }
+Name: John
+Name: Mike
+Name: August
+
+Puedo ver que,obviamente,muchos comandos me devuelven arreglos:
+╰─ (Get-Process).GetType()
+
+IsPublic IsSerial Name                                     BaseType
+-------- -------- ----                                     --------
+True     True     Object[]                                 System.Array
+
+Fijate en la sintaxis (comand).GetType() en vez de comand.GetType.Esta sintaxis hace tratar toda la salida del Get-Process como una única cosa,en vez de ejecutar GetType por cada linea.
+Sabiendo esto también puedo acceder al indice 0 de toda la salida:
+(Get-Process)[0] <- esto me dará el primer proceso
+
+Puedo ver también de esta forma el nº de procesos corriendo:
+(Get-Process).Length
+180 <- realmente son demasiados para tener solo la Powershell corriendo,no?
+
+TIP:ya hemos recalcado que un string es un arreglo de char,no?Comprobemoslo:
+
+╰─ $str = 'abc';
+
+╰─ $str[1]
+b <- esto confirma que es un arreglo de chars.
+Fijate que es bastante sencillo todo en Powershell.
+
+VIDEO 07
