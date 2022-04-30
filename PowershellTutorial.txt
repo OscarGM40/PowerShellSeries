@@ -575,4 +575,186 @@ TIP:ya hemos recalcado que un string es un arreglo de char,no?Comprobemoslo:
 b <- esto confirma que es un arreglo de chars.
 Fijate que es bastante sencillo todo en Powershell.
 
-VIDEO 07
+		VIDEO 07 SCRIPTING IN FILES + HASHTABLES + STATIC
+
+Un script no es más que un File con código de Powershell en él.Esto hará que sea ejecutable y pueda correr/ejecutar el script del archivo.
+Cuando lo haga ejecutará secuencialmente todas las lineas del archivo,de arriba a abajo.
+
+NOTA: para crear un script en PS tiene que ser un file con extensión .ps1.
+Puedo crear el file con echo "" > file.js o con type nul > file.ps1.Investigar más sobre esto.
+TIP: y para ejecutarlo simplemente uso ./script.ps1.Puede que tenga deshabilitado la ejecución de scripts en el sistema(restricted).
+IMOPORTANTE: Powershell siempre vendrá con la ejecución de scripts deshabilitada por defecto para evitar que un usuario inexperto tenga problemas
+Fijate que puedo ponerla en undefined,allSigned,remoteSigned o unrestricted.Parece que remoteSigned me permite ejecutar cualquier script de mi máquina y los de afuera tengo que desbloquearlos primero,lo cual la hace mejor opción que unrestricted.
+
+Bien,hagamos un pequeño script que sume dos enteros que introducirá el usuario.
+
+Write-Output 'Please enter the first number:';
+$first = [int](Read-Host); # fijate como necesita parentesis
+# $first.GetType();
+
+Write-Output 'Please enter the second number:';
+$second = Read-Host;
+# $second.GetType();
+
+$total = $first + [int]$second; # obviamente puedo parsear despues
+
+Write-Output "The sum of $first and $second is $total." #recuerda que los double quotes interpretan las variables
+
+		STATIC MEMBERS
+
+Empecemos con esto [type]::thing .Bien,todo Object en PowerShell tiene Members,y recuerda que tendrá diferentes basandose en su Type.
+Es decir un Objeto File tendrá el Member Name,por ejemplo,pero lo que guarde este Member o propiedad será diferente para cada File(propiedad no estática).
+Y lo mismo para los Methods, si llamo a Delete sobre un File borrará ese File.
+
+Sin embargo existe algo llamado Static Members, y a diferencia de los Non-Static Members o Methods,estos Static Members compartirán su valor entre todos los Objects de ese Type.No existen en el Objeto de forma individual,sino en el Type(o clase).
+Ya lo vi con DateTime::new , pertenece a la clase y sólo hay uno,aunque en este caso estamos hablando de un Method,pero es lo mismo para una propiedad.
+
+IMOPORTANTE: la forma de acceder a un miembro estático es con [type]::Member.
+Puedo ver todos los Members estáticos de un type usando el método Get-Member sobre un [type] y la flag -Static para que no saque todos:
+
+╰─ [datetime] | Get-Member -Static
+
+   TypeName: System.DateTime
+
+Name            MemberType Definition
+----            ---------- ----------
+Compare         Method     static int Compare(datetime t1, datetime t2)
+DaysInMonth     Method     static int DaysInMonth(int year, int month)
+Equals          Method     static bool Equals(datetime t1, datetime t2), static bool Equ...
+FromBinary      Method     static datetime FromBinary(long dateData)
+
+Puedo ver el MemberType(en este caso los primeros 4 Method y una Definition con la sobrecarga,etc...
+* Fijate que tendre que acceder con datetime:: a estos métodos.
+* Fijate el constructor que usé como es estático: 
+new             Method     datetime new(long ticks), datetime new(long ticks, System
+
+Y leyendo esto puedo aprender como mostrar la date time actual(y como solo es un getter)
+Now             Property   datetime Now {get;}
+
+NOTA: hay incluso Types o Clases que sólo tienen Members Statics,como [Environment]:
+
+			HASH TABLES
+
+Bien, una vez visto como acceder y tener un listado de Members estáticos, nos falta ver qué es esto @{}. En el episodio anterior ví que con @(val1,val2,val3) creo un array,pero que hace con llaves?
+TIP: la razón por la que la sintaxis es muy similar es que ambos crean Colecciones(de echo heredan de ICollection).
+Bien,@{} lo que hace es crear una hast table,donde se guardarán pares de clave-valor y serán accesados por la key.Es decir,que es el tipico Map u Object Literal.
+
+  HASH-TABLE
+     Key    Value
+   'Alex'   200
+   'Mike'   24
+   'Tom'    45
+
+Eso es una hash-table.Fijate que es igual que un array,pero me permite elegir a mi la key:
+
+  ARRAY
+   Key    Value
+   0      200
+   1      24
+   2      45
+
+Bien,la forma de crear un Map es con @{ key = value; key = value; } separandolos con punto y coma:
+@{ First = 4; Second = 4 }
+Para acceder habrá que hacerlo con propiedades computadas.Ojo,que serán String:
+$ht['First'] ó $ht['Mike']
+
+Ejemplo:
+$ht = @{ Alex = 200; Tom = 50 }
+
+╰─ $ht['Alex']
+200
+
+IMPORTANTE: para añadir una nueva key con su value a una hash table sabiendo lo que sé lo mejor es ver la documentación:
+
+─ $ht | Get-Member
+
+
+   TypeName: System.Collections.Hashtable
+
+Name              MemberType            Definition
+----              ----------            ----------
+Add               Method                void Add(System.Object key, System.Object value)...
+Clear             Method                void Clear(), void IDictionary.Clear()
+Clone             Method                System.Object Clone(), System.Object ICloneable....
+Contains          Method                bool Contains(System.Object key), bool IDictiona...
+ContainsKey       Method                bool ContainsKey(System.Object key)
+ContainsValue     Method                bool ContainsValue(System.Object value)
+CopyTo            Method                void CopyTo(array array, int arrayIndex), void I...
+Equals            Method                bool Equals(System.Object obj)
+GetEnumerator     Method                System.Collections.IDictionaryEnumerator GetEnum...
+GetHashCode       Method                int GetHashCode()
+GetObjectData     Method                void GetObjectData(System.Runtime.Serialization....
+GetType           Method                type GetType()
+OnDeserialization Method                void OnDeserialization(System.Object sender), vo...
+Remove            Method                void Remove(System.Object key), void IDictionary...
+ToString          Method                string ToString()
+
+Puedo ver que puedo añadir con Add(key,value) o borrar con Remove(key) y obviamente operar de la forma que considere oportuno
+$ht.Add('Pepe',40); <- parece que la key debe ser un String también.
+
+IMPORTANTE: una hash table no es reconocida como una colección iterable.Ejecutar un for-each o Measure dará error o extraños resultados.
+Para evitar esto debo convertirla a un iterable con GetEnumerator().Nada más:
+
+╰─ $ht | % { $_.Name }
+  <- no sale nada,pues no consigue iterar sobre el Map
+╰─ $ht.GetEnumerator() | % { $_.Name }
+Julen
+Alex
+Tom
+
+Lo mismo para obtener la length:
+╰─ $ht.GetEnumerator() | Measure
+
+Count    : 3
+
+NOTA: puedo castear una Hash Table a Object asi:
+$obj = [PSCustomObject]$ht
+
+El Map pasará a ser un Object con las Propiedades Julen,Alex y Tom.No confundas un	Literal Object con un Map
+
+			MULTI-LINE STATEMENTS
+
+¿Que pasa si quiero ejecutar múltiples lineas en un script?Para ello puedo separar las instruccions por punto y coma y saltar de linea,aunque PowerShell ya va a interpretar cada linea como una instruccion,igual que Python:
+
+@(1,2,3) | ForEach-Object {
+    Write-Output "Hello!"
+    Write-Output "World!"
+}
+
+Obviamente podia usar una linea: @(1,2,3) | % { echo "Hello"; echo "World"; }
+
+NOTA: Incluso puedo crear el arreglo en multiples líneas:
+@(
+  1
+  2
+  3
+) <- e incluso no necesito el separador si lo hago asi.Puedo ver que coge prácticas de muchos sitios,se ve que que es más nuevo que Bash.
+IMPORTANTE: esto no solo funciona en un file .ps1, también en la terminal,simplemente tengo que dar un intro.
+
+			SECOND SCRIPT
+
+Este script va a ser más interesante.Va a listar el LineCount de los todos files en la posición actual,diciendome el nº de lineas de cada archivo
+
+$files = ls;
+$files | % { $_ | Add-Member -NotePropertyMembers @ { LineCount = 0 } }
+$files | ft -Property @('Name','LineCount')
+
+Fijate que ft -Property lleva un array de strings con las props a mostrar ya que por defecto están ocultas las Customproperties
+
+Por último,nos queda averigüar el número de lineas.Get-Content(file) justo nos devuelve el contenido de un file en un array de lineas.Con saber su length bastará:
+$noOfFiles = (Get-Content $_).Length:
+
+$files = Get-ChildItem;
+
+$files | ForEach-Object { 
+  $noOfLines = (Get-Content $_).Length
+  $_ | Add-Member -NotePropertyMembers @{ LineCount = $noOfLines }  
+};
+
+$files | Format-Table -Property @('Name','LineCount');
+
+Genial.Todo más claro que el caldo de un asilo.
+
+			VIDEO 08 IF OPERATORS - TAKING SCRIPTING FURTHER
+
+			
