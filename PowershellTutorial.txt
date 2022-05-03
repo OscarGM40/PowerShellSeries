@@ -757,4 +757,70 @@ Genial.Todo más claro que el caldo de un asilo.
 
 			VIDEO 08 IF OPERATORS - TAKING SCRIPTING FURTHER
 
+Un operador es una herramienta del lenguaje que me permite realizar operaciones especificas de algun tipo sobre algunos lenguajes.Por ejemplo, el operador -eq compara dos objetos.Otro operador que he usado mucho es el de casting [type]$a.Y otro que he usado mucho es el operador punto(.) que me permite acceder a las propiedades.Otro más es el ::, que me permite acceder a miembros estáticos.
+
+COMPARISON OPERATORS: como operadores de comparación tengo gt,ge,eq,ceq,like,match,lt,le,etc...Siempre arrojarán un resultado boleano tras realizar la comparación.
+
+NOTA: -eq no es case sensitive:
+"a" -eq "A"
+True
+Para que esto dé true tengo que usar el operador "-ceq",el cual aún no había visto:
+"a" -ceq "A"
+False
+
+También tengo -gt -ge -lt o -le como comparadores.Aparte tengo otros donde usar wildcards como -like(wildcars de PS: * zero o más characters; :
+"ana" -like "*na"
+True
+
+TIP: también tengo -notlike , -match y -notmatch
+
+BOOLEANS OPERATORS: el operador ! invierte el resultado de un boleano:
+!$true
+False
+Los operadores -and y -or deben cumplir ambas o una de las dos para que se cumpla a true.Recuerda que como en cualquier lenguaje los operadores siguen un orden de importancia(precedencia de operadores), siempre que tenga dudas lo mejor es usar parentesis:
+($_.CPU -gt 10) -and ($_.Name -like 'ab*'); <- si no tengo claro si irá el like o el gt o el and antes siempre puedo usar paréntesis.
+
+TIP: la mayoria de los operadores se van a comportar diferente si se les pasa una colección,tratarán de iterarla:
+@('ab','bb','abc') -like '*a*'
+ab
+abc
+
+IF STATEMENTS: para crear una sentencia if usaré la sintaxis if(condition){ logic}Nada nuevo,es C#
+Write-Output "Do you like ABMedia? (y/n)"
+$answer = Read-Host -Prompt "options are y or n"
+
+if ($answer -ceq "y" -or $answer -ceq "yes") {
+  Write-Output "You said yes.  Great!"
+}
+elseif($answer -ceq "n" -or $answer -ceq "no") {
+  Write-Output "You said no.  That's too bad."
+}
+Y otro con elseif + exit(fijate que era necesario)
+
+$percentage = [int](Read-Host -Prompt "Enter your percentage: ")
+
+if($percentage -lt 0 -or $percentage -gt 100)
+{
+    Write-Output "Invalid percentage"
+    exit
+}  
+
+if($percentage -ge 90){
+    Write-Host "You got A+"
+}
+elseif($percentage -ge 80){
+    Write-Host "You got A"
+}
+elseif($percentage -ge 70){
+    Write-Host "You got B+"
+}
+elseif($percentage -ge 60){
+    Write-Host "You got B"
+}
+else ....
+En el siguiente video veré como debuggear código en la PS.
+
+			VIDEO 09 DEBUGGING + SELECT + LOOPING
+
 			
+
