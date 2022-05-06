@@ -822,5 +822,40 @@ En el siguiente video veré como debuggear código en la PS.
 
 			VIDEO 09 DEBUGGING + SELECT + LOOPING
 
-			
+Para debugear en VSCode puedo ir a Run/Start Debugging(en cualquier lenguaje?).Previamente debería haber marcado algun breakpoint en el lateral.
+Aparecerá un menu contextual para avanzar paso a paso,terminar el debugging,etc...
+
+			SELECT-OBJECT COMMAND
+
+Anteriormente ví los comandos Where-Object,ForEach-Object y Measure-Object.El primero me permite filtrar,el segundo sacar una propiedad o simplemente iterar y el tercero sacaba medidas sobre la operación.Veremos por último el comando Select-Object,el cual permite realizar varias cosas también.
+
+Si imprimo la ayuda veré que puedo usar las flags First, Last, Skip, Unique o Property entre otras.
+>Get-Process | Select -First 5 <- importante,select devuelve un nuevo array con su retorno
+> @(1,2,3,4) | select -Skip 2
+3
+4
+Select es tan poderoso que incluso me permite filtrar por valores únicos:
+ @(1,2,2,3,3) | select -Unique
+1
+2
+3
+Por último,y una de sus mejores features es usar la flag -Property.A diferencia de forEach,que sólo devuelve un arreglo de strings o enteros(devuelve el arreglo de los values),select -Property <propName> devuelve el Objeto inicial,con la key - value especificada como argumento.
+
+>$proc | select -Property Name | select -First 5
+
+Name
+----
+aesm_service
+ApplicationFrameHost
+audiodg
+AutoHotKey
+AutoHotkey
+
+Esto lo puedo ver mejor si lo exporto a un csv,ya que for-each va a mandar un arreglo de strings,sin cabeceras ni nada.Si quisiera exportar la data tengo que usar select para mantener las cabeceras.
+
+$proc | select -Property ProcessName | Export-Csv good.csv
+
+			LOOPING + WHERE 
+
+1717mm			
 
